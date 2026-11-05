@@ -4,6 +4,7 @@ require("dotenv").config();
 const { env } = require("./config/env");
 const { pool } = require("./config/database");
 const { authRouter } = require("./routes/auth");
+const { jobsRouter } = require("./routes/jobs");
 const { organizationsRouter } = require("./routes/organizations");
 
 const app = express();
@@ -11,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/v1/auth", authRouter);
+app.use("/v1/jobs", jobsRouter);
 app.use("/v1", organizationsRouter);
 
 // Health check API
