@@ -103,6 +103,37 @@ jobsRouter.get("/", requireAuth, async (req, res) => {
   }
 });
 
+jobsRouter.get("/:id", requireAuth, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    if (!/^[1-9]\d*$/.test(jobId)) {
+      return res.status(400).json({ success: false, message: "Enter a valid job ID" });
+    }
+
+    const [jobs] = await pool.execute(
+      `SELECT j.id, j.project_id, j.name, j.task_name, j.payload,
+              j.status, j.created_at, j.updated_at
+       FROM jobs j
+       JOIN projects p ON p.id = j.project_id
+       JOIN organization_members om ON om.organization_id = p.organization_id
+       WHERE j.id = ? AND om.user_id = ?
+       LIMIT 1`,
+      [jobId, req.userId]
+    );
+
+    if (jobs.length === 0) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    return res.json({ success: true, data: jobs[0] });
+  } catch (error) {
+    console.error("Error getting job:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+});
 
 
 
