@@ -80,20 +80,27 @@ console.log("Projects found:", projects);
     });
   }
 });
-
 jobsRouter.get("/", requireAuth, async (req, res) => {
+  try {
+    const [jobs] = await pool.execute(
+      `SELECT j.id, j.project_id, j.name, j.task_name, j.payload,
+              j.status, j.created_at, j.updated_at
+       FROM jobs j
+       JOIN projects p ON p.id = j.project_id
+       JOIN organization_members om ON om.organization_id = p.organization_id
+       WHERE om.user_id = ?
+       ORDER BY j.created_at DESC`,
+      [req.userId]
+    );
 
-     try{
-
-        const  [res] = await pool.execute('SELECT j.id,j.project_id,j.name,j.task_name,j.payload,j.status,j.created_at,j.updated_at FROM jobs j ');
-
-     }
-     catch(error){
-        
-
-
-     }
-
+    return res.json({ success: true, data: jobs });
+  } catch (error) {
+    console.error("Error listing jobs:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 });
 
 
